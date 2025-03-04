@@ -10,19 +10,15 @@ from langgraph.prebuilt import ToolNode
 from langgraph.graph import END
 from langgraph.prebuilt import tools_condition
 from langgraph.checkpoint.memory import MemorySaver
-from langchain_anthropic import ChatAnthropic
 from dotenv import load_dotenv
 
 load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = os.getenv("LANGCHAIN_TRACING_V2")
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-#os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-os.environ["ANTHROPIC_API_KEY"] = os.getenv("ANTHROPIC_API_KEY")
-
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 uri = os.environ["MONGODB_URI"]
     
-#llm = ChatOpenAI(model="gpt-4o",temperature=0)
-llm = ChatAnthropic(model='claude-3-7-sonnet-latest',max_tokens=20000 ,thinking=({"type":"enabled", "budget_tokens": 16000}))
+llm = ChatOpenAI(model="gpt-4o",temperature=0)
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -57,8 +53,9 @@ def retrieve(query: str):
 
 def query_or_respond(state: MessagesState):
     """Generate tool call for retrieval or respond."""
-    llm_with_tools = llm.bind_tools([retrieve])#,tool_choice="required")
-    response = response = llm_with_tools.invoke([{"role": "system", "content": "Die Fragen beziehen sich auf die Handwerkersoftware: Powerbird®"}, *state["messages"]])
+    llm_with_tools = llm.bind_tools([retrieve],tool_choice="required")    
+    response = llm_with_tools.invoke([{"role": "system", "content": "Die Fragen beziehen sich auf die Handwerkersoftware: Powerbird®"}, *state["messages"]])
+
     return {"messages": [response]}
 
 # Step 2: Execute the retrieval.
