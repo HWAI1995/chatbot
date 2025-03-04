@@ -1,5 +1,5 @@
 import os
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from langchain_mongodb import MongoDBAtlasVectorSearch
