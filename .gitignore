@@ -1,0 +1,5 @@
+.env
+/myenv
+/.langgraph_api
+/my_agent/data/
+/my_agent/__pycache__
