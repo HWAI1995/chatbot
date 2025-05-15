@@ -12,13 +12,14 @@ from langgraph.prebuilt import tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_anthropic import ChatAnthropic
 from dotenv import load_dotenv
+from langchain_cohere import CohereRerank
+from typing import List, Any
 
 load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = os.getenv("LANGCHAIN_TRACING_V2")
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-#os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["ANTHROPIC_API_KEY"] = os.getenv("ANTHROPIC_API_KEY")
-
+os.environ["COHERE_API_KEY"] = os.getenv("COHERE_API_KEY")
 uri = os.environ["MONGODB_URI"]
     
 #llm = ChatOpenAI(model="gpt-4o",temperature=0)
@@ -45,15 +46,43 @@ vector_store = MongoDBAtlasVectorSearch(
 
 graph_builder = StateGraph(MessagesState)
 
+
+def rerank_documents(
+    documents: List[Any],
+    query: str,
+    model_name: str = "rerank-v3.5",
+    top_n: int = 15,
+    max_tokens_per_doc: int = 10_000
+) -> List[Any]:
+    # Initialisiere das Rerank-Modell
+    compressor = CohereRerank(model=model_name)
+
+    # Führe das Reranking durch
+    results = compressor.rerank(
+        documents=documents,
+        query=query,
+        top_n=top_n,
+        max_tokens_per_doc=max_tokens_per_doc
+    )
+
+    indices = [d['index'] for d in results]
+    get = documents.__getitem__
+    reranked_documents = [get(i) for i in indices]
+    
+    return reranked_documents
+
+    
+
 @tool(response_format="content_and_artifact")
 def retrieve(query: str):
     """Retrieve information related to a query."""
-    retrieved_docs = vector_store.similarity_search(query, k=20)
+    retrieved_docs = vector_store.similarity_search(query, k=50)
+    reranked_docs = rerank_documents(documents=retrieved_docs, query=query, top_n=20)
     serialized = "\n\n".join(
         (f"Source: {doc.metadata}\n" f"Content: {doc.page_content}")
-        for doc in retrieved_docs
+        for doc in reranked_docs
     )
-    return serialized, retrieved_docs
+    return serialized, reranked_docs
 
 def query_or_respond(state: MessagesState):
     """Generate tool call for retrieval or respond."""
