@@ -16,10 +16,7 @@ from langchain_cohere import CohereRerank
 from typing import List, Any
 
 load_dotenv()
-os.environ["LANGCHAIN_TRACING_V2"] = os.getenv("LANGCHAIN_TRACING_V2")
-os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
-os.environ["ANTHROPIC_API_KEY"] = os.getenv("ANTHROPIC_API_KEY")
-os.environ["COHERE_API_KEY"] = os.getenv("COHERE_API_KEY")
+
 uri = os.environ["MONGODB_URI"]
     
 #llm = ChatOpenAI(model="gpt-4o",temperature=0)
